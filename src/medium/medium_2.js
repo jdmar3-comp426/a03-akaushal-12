@@ -20,11 +20,46 @@ see under the methods section
  * @param {allCarStats.ratioHybrids} ratio of cars that are hybrids
  */
 export const allCarStats = {
-    avgMpg: undefined,
-    allYearStats: undefined,
-    ratioHybrids: undefined,
+    avgMpg: getAvgMpg(mpg_data),
+    allYearStats: getYearStats(mpg_data),
+    ratioHybrids: getHybridRatio(mpg_data),
 };
 
+export function getAvgMpg(array) {
+    var numHwy = 0;
+    var numCity = 0;
+    var sumHwy = 0;
+    var sumCity = 0;
+    for (var i = 0; i < array.length; i++) {
+        sumCity += array[i].city_mpg; 
+        sumHwy += array[i].highway_mpg;
+        numHwy++;
+        numCity++;
+    }
+    var city = sumCity / numCity; 
+    var highway = sumHwy / numHwy; 
+    return {city, highway};
+}
+
+export function getYearStats(array) {
+    let newArray = []; 
+    for (let i = 0; i < array.length; i++){
+        newArray[i] = mpg_data[i].year; 
+    }
+    return getStatistics(newArray);
+}
+
+export function getHybridRatio(array) {
+    var numHybrids = 0;
+    var numOfCars = 0;
+    for (let i = 0; i < array.length; i++) {
+        numOfCars++;
+        if (mpg_data[i].hybrid) {
+            numHybrids;
+        }
+    }
+    return numHybrids / numOfCars; 
+}
 
 /**
  * HINT: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
@@ -84,6 +119,27 @@ export const allCarStats = {
  * }
  */
 export const moreStats = {
-    makerHybrids: undefined,
-    avgMpgByYearAndHybrid: undefined
+    makerHybrids: [...new Set(mpg_data.map(car => car.make))].map(make => {
+        return {
+            make: make,
+            hybrids: mpg_data.filter(car => car.make === make && car.hybrid).map(car => car.id)
+        };
+    }).filter(make => make.hybrids.length > 0).sort((a,b) => b.hybrids.length - a.hybrids.length),
+    avgMpgByYearAndHybrid: getFunction(), 
 };
+
+export function getFunction() {
+    let newObject = {};
+    let year = mpg_data.map(elem => elem.year);
+    let normal = mpg_data.filter(elem => elem.hybrid != true);
+    let hybrid = mpg_data.filter(elem => elem.hybrid != false);
+    for(let i = 0; i < year.length; i++) {
+        let indexYear = year[i];
+        let result = {
+            hybrid: getAvgMpg(hybrid.filter(elem => elem.year == indexYear)),
+            notHybrid: getAvgMpg(normal.filter(elem => elem.year == indexYear))
+        }
+        newObject[indexYear] = result; 
+    };
+    return newObject; 
+}
